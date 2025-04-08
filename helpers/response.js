@@ -1,5 +1,5 @@
 
-const apiResponse = (res, statusCode, message, data = null) => {
+const apiResponse = (res, statusCode, message, data = {}) => {
   res.json({
     code: statusCode,
     message,
