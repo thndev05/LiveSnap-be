@@ -8,7 +8,7 @@ module.exports.test = async (req, res) => {
   res.json(users);
 }
 
-module.exports.create = async (req, res) => {
+module.exports.register = async (req, res) => {
   let { username, firstName, lastName, email, password } = req.body;
 
   const existEmail = await User.findOne({
