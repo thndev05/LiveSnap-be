@@ -32,4 +32,14 @@ router.patch('/remove-avatar',
   controller.removeAvatar
 );
 
+router.patch('/update-name',
+  authMiddleware.requireAuth,
+  controller.updateName
+);
+
+router.post('/check-email-exist',
+  controller.checkEmailExist
+);
+
+
 module.exports = router;

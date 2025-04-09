@@ -112,3 +112,51 @@ module.exports.removeAvatar = async (req, res) => {
     return apiResponse(res, 400, 'Failed to remove avatar.');
   }
 }
+
+// [PATCH]: BASE_URL/api/users/remove-avatar
+module.exports.updateName = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { firstName, lastName } = req.body;
+
+    const update = {};
+    if(firstName) {
+      update.firstName = firstName;
+    }
+    if(lastName) {
+      update.lastName = lastName;
+    }
+
+    await User.findByIdAndUpdate(userId, update);
+
+    return apiResponse(res, 200, 'Update name successfully.', update);
+  } catch (e) {
+    return apiResponse(res, 400, 'Failed to update name.');
+  }
+}
+
+// [POST]: BASE_URL/api/users/check-email-exist
+module.exports.checkEmailExist = async (req, res) => {
+  try {
+    const email = req.body.email;
+    const existEmail = await User.findOne({
+      email: email
+    });
+
+    if(existEmail) {
+      return res.json({
+        code: 200,
+        exist: true,
+        message: 'Email already exists.'
+      })
+    } else {
+      return res.json({
+        code: 200,
+        exist: false,
+        message: 'Email does not exist.'
+      })
+    }
+  } catch (e) {
+    return apiResponse(res, 400, 'Failed to check exist email.');
+  }
+}
