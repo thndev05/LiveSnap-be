@@ -160,3 +160,29 @@ module.exports.checkEmailExist = async (req, res) => {
     return apiResponse(res, 400, 'Failed to check exist email.');
   }
 }
+
+// [POST]: BASE_URL/api/users/check-username-exist
+module.exports.checkUsernameExist = async (req, res) => {
+  try {
+    const username = req.body.username;
+    const existUsername = await User.findOne({
+      username: username
+    });
+
+    if(existUsername) {
+      return res.json({
+        code: 200,
+        exist: true,
+        message: 'Username already exists.'
+      })
+    } else {
+      return res.json({
+        code: 200,
+        exist: false,
+        message: 'Username does not exist.'
+      })
+    }
+  } catch (e) {
+    return apiResponse(res, 400, 'Failed to check exist email.');
+  }
+}

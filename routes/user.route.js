@@ -41,5 +41,9 @@ router.post('/check-email-exist',
   controller.checkEmailExist
 );
 
+router.post('/check-username-exist',
+  controller.checkUsernameExist
+);
+
 
 module.exports = router;
