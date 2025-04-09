@@ -1,7 +1,7 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const apiResponse = require('../helpers/response');
 
 // [POST]: BASE_URL/api/users/register
@@ -69,7 +69,7 @@ module.exports.detail = async (req, res) => {
   }
 }
 
-// [POST]: BASE_URL/api/users/setAvatar
+// [POST]: BASE_URL/api/users/set-avatar
 module.exports.setAvatar = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -85,5 +85,30 @@ module.exports.setAvatar = async (req, res) => {
     }
   } catch (e) {
     return apiResponse(res, 400, 'Failed to set avatar.')
+  }
+}
+
+// [PATCH]: BASE_URL/api/users/remove-avatar
+module.exports.removeAvatar = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if(user.avatar === null || user.avatar === '') {
+      return apiResponse(res, 400, 'Dont have avatar to remove.');
+    }
+
+    const publicId = user.avatar.split('/').pop().split('.')[0];
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
+    }
+
+    user.avatar = null;
+    await user.save();
+
+    return apiResponse(res, 200, 'Remove avatar successfully.');
+  } catch (e) {
+    console.error('Remove avatar error:', e);
+    return apiResponse(res, 400, 'Failed to remove avatar.');
   }
 }

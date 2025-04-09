@@ -12,7 +12,9 @@ const upload = multer({
 }).any();
 
 router.post('/register', controller.register);
+
 router.post('/login', controller.login);
+
 router.get('/detail',
   authMiddleware.requireAuth,
   controller.detail
@@ -23,6 +25,11 @@ router.post('/set-avatar',
   upload,
   uploadCloud.upload,
   controller.setAvatar
+);
+
+router.patch('/remove-avatar',
+  authMiddleware.requireAuth,
+  controller.removeAvatar
 );
 
 module.exports = router;
