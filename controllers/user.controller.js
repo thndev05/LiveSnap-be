@@ -56,3 +56,14 @@ module.exports.login = async (req, res) => {
     token: token
   });
 }
+
+// [GET]: BASE_URL/api/users/detail
+module.exports.detail = async (req, res) => {
+  try {
+    return apiResponse(res, 200, 'Get detail successfully', {
+      info: req.user
+    })
+  } catch (err) {
+    return apiResponse(res, 400, 'Get detail failed');
+  }
+}
