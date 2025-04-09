@@ -1,6 +1,7 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
 const apiResponse = require('../helpers/response');
 
 // [POST]: BASE_URL/api/users/register
@@ -65,5 +66,24 @@ module.exports.detail = async (req, res) => {
     })
   } catch (err) {
     return apiResponse(res, 400, 'Get detail failed');
+  }
+}
+
+// [POST]: BASE_URL/api/users/setAvatar
+module.exports.setAvatar = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    if (req.body.files && req.body.files.length > 0) {
+      const avatarUrl = req.body.files[0].image;
+
+      await User.findByIdAndUpdate(userId, {
+        avatar: avatarUrl
+      });
+
+      return apiResponse(res, 200, 'Set avatar successfully.', avatarUrl);
+    }
+  } catch (e) {
+    return apiResponse(res, 400, 'Failed to set avatar.')
   }
 }

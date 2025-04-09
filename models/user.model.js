@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: [8, 'Password must be at least 6 characters long'],
   },
+  avatar: String,
   createdAt: {
     type: Date,
     default: Date.now,
