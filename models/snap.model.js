@@ -11,9 +11,13 @@ const snapSchema = new mongoose.Schema({
     default: '',
     maxlength: 36
   },
-  imageUrl: {
+  image: {
     type: String,
     required: true,
+  },
+  deleted: {
+    type: Boolean,
+    default: false
   },
   createdAt: {
     type: Date,
