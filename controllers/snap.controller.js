@@ -65,6 +65,6 @@ module.exports.delete = async (req, res) => {
 
   } catch (error) {
     console.error('Upload Snap Error:', error);
-    return apiResponse(res, 200, 'Server error.');
+    return apiResponse(res, 400, 'Server error.');
   }
 }
