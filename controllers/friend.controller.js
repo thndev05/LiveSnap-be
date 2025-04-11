@@ -1,10 +1,10 @@
 const Friend = require('../models/friend.model');
 const apiResponse = require('../helpers/response');
 
-// [POST]: BASE_URL/api/friends/request
+// [POST]: BASE_URL/api/friends/request/:id
 module.exports.sendFriendRequest = async (req, res) => {
   try {
-    const { friendId } = req.body;
+    const friendId = req.params.id;
     const userId = req.user?._id;
 
     if (!friendId || !userId) {
@@ -12,14 +12,15 @@ module.exports.sendFriendRequest = async (req, res) => {
     }
 
     if (userId.toString() === friendId) {
-      return apiResponse(res, 400, 'You cannot send friend request to yourself.');
+      return apiResponse(res, 400, 'You cannot send a friend request to yourself.');
     }
 
     const exists = await Friend.findOne({
       $or: [
         { userId, friendId },
         { userId: friendId, friendId: userId }
-      ]
+      ],
+      status: { $in: ['pending', 'accepted'] }
     });
 
     if (exists) {
@@ -98,6 +99,118 @@ module.exports.getFriendList = async (req, res) => {
     return apiResponse(res, 200, 'Get friends successfully', { friends: friendList });
   } catch (err) {
     console.error('Get Friends Error:', err);
+    return apiResponse(res, 400, 'Server error.');
+  }
+};
+
+// [POST] /api/friends/accept/:friendId
+module.exports.acceptFriendRequest = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const friendId = req.params.id;
+
+    const request = await Friend.findOne({
+      userId: friendId,
+      friendId: userId,
+      status: 'pending'
+    });
+
+    if (!request) {
+      return apiResponse(res, 400, 'No matching friend requests found.');
+    }
+
+    request.status = 'accepted';
+    await request.save();
+
+    const exists = await Friend.findOne({
+      userId: userId,
+      friendId: friendId
+    });
+
+    if (!exists) {
+      await new Friend({
+        userId: userId,
+        friendId: friendId,
+        status: 'accepted'
+      }).save();
+    }
+
+    return apiResponse(res, 200, 'Friend request accepted.');
+  } catch (error) {
+    console.error('Accept Friend Error:', error);
+    return apiResponse(res, 400, 'Server error.');
+  }
+};
+
+// [POST] /api/friends/reject/:friendId
+module.exports.rejectFriendRequest = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const friendId = req.params.id                                                ;
+
+    const request = await Friend.findOne({
+      userId: friendId,
+      friendId: userId,
+      status: 'pending'
+    });
+
+    if (!request) {
+      return apiResponse(res, 400, 'No matching friend requests found.');
+    }
+
+    request.status = 'rejected';
+    await request.save();
+
+    return apiResponse(res, 200, 'Friend request rejected.');
+  } catch (error) {
+    console.error('Reject Friend Error:', error);
+    return apiResponse(res, 400, 'Server error.');
+  }
+};
+
+// [DELETE]: /api/friends/cancel-request/:id
+module.exports.cancelFriendRequest = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const friendId = req.params.id;
+
+    const request = await Friend.findOneAndDelete({
+      userId,
+      friendId,
+      status: 'pending'
+    });
+
+    if (!request) {
+      return apiResponse(res, 400, 'No pending friend request found to cancel.');
+    }
+
+    return apiResponse(res, 200, 'Friend request cancelled successfully.');
+  } catch (err) {
+    console.error('Cancel Friend Request Error:', err);
+    return apiResponse(res, 400, 'Server error.');
+  }
+};
+
+// [DELETE]: /api/friends/remove/:id
+module.exports.unfriend = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const friendId = req.params.id;
+
+    const deleted = await Friend.deleteMany({
+      $or: [
+        { userId: userId, friendId: friendId, status: 'accepted' },
+        { userId: friendId, friendId: userId, status: 'accepted' }
+      ]
+    });
+
+    if (deleted.deletedCount === 0) {
+      return apiResponse(res, 400, 'No friendship found to delete.');
+    }
+
+    return apiResponse(res, 200, 'Unfriended successfully.');
+  } catch (err) {
+    console.error('Unfriend Error:', err);
     return apiResponse(res, 400, 'Server error.');
   }
 };
