@@ -1,5 +1,6 @@
 const Snap = require('../models/snap.model');
 const apiResponse = require('../helpers/response');
+const Friend = require('../models/friend.model');
 
 // [GET]: BASE_URL/api/snaps/test
 module.exports.test = async (req, res) => {
@@ -68,3 +69,39 @@ module.exports.delete = async (req, res) => {
     return apiResponse(res, 400, 'Server error.');
   }
 }
+
+// [GET]: BASE_URL/api/snaps/load
+module.exports.loadSnaps = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const friendships = await Friend.find({
+      userId: userId,
+      status: 'accepted'
+    });
+
+    const friendWithDate = friendships.map(f => {
+      const friendId = f.userId.toString() === userId.toString() ? f.friendId : f.userId;
+      return {
+        friendId,
+        friendSince: f.friendSince
+      };
+    });
+
+    const snapConditions = friendWithDate.map(f => ({
+      userId: f.friendId,
+      createdAt: { $gte: f.friendSince }
+    }));
+
+    snapConditions.push({ userId: userId });
+
+    const snaps = await Snap.find({ $or: snapConditions })
+      .populate('userId', 'firstName avatar')
+      .sort({ createdAt: -1 });
+
+    return apiResponse(res, 200, 'Loaded snaps successfully.', snaps);
+  } catch (e) {
+    console.error('Load snaps error:', e);
+    return apiResponse(res, 500, 'Failed to load snaps.');
+  }
+};

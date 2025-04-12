@@ -120,6 +120,8 @@ module.exports.acceptFriendRequest = async (req, res) => {
     }
 
     request.status = 'accepted';
+    const friendSinceTime = new Date();
+    request.friendSince = friendSinceTime;
     await request.save();
 
     const exists = await Friend.findOne({
@@ -131,7 +133,8 @@ module.exports.acceptFriendRequest = async (req, res) => {
       await new Friend({
         userId: userId,
         friendId: friendId,
-        status: 'accepted'
+        status: 'accepted',
+        friendSince: friendSinceTime
       }).save();
     }
 
