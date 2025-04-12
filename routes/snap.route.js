@@ -21,4 +21,6 @@ router.post('/upload',
 
 router.delete('/delete/:id', controller.delete);
 
+router.get('/load', controller.loadSnaps);
+
 module.exports = router;
