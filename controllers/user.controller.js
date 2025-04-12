@@ -16,6 +16,14 @@ module.exports.register = async (req, res) => {
     return apiResponse(res, 400, 'Email already exists.');
   }
 
+  const existUsername = await User.findOne({
+    username: username
+  })
+
+  if (existUsername) {
+    return apiResponse(res, 400, 'Username already exists.');
+  }
+
   password = await bcrypt.hash(password, 10);
   const user = new User({
     username,
