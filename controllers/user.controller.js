@@ -54,7 +54,8 @@ module.exports.login = async (req, res) => {
   res.cookie("token", token);
 
   return apiResponse(res, 200, 'Login successfully.', {
-    token: token
+    token,
+    user
   });
 }
 

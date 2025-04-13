@@ -77,26 +77,16 @@ module.exports.getOutgoingFriendRequest = async (req, res) => {
 module.exports.getFriendList = async (req, res) => {
   try {
     const userId = req.user._id;
+    const limit = parseInt(req.query.limit);
 
     const friends = await Friend.find({
-      $or: [
-        { userId: userId },
-        { friendId: userId }
-      ],
+      userId: userId,
       status: 'accepted'
-    })
-      .populate('userId', 'username avatar firstName lastName')
-      .populate('friendId', 'username avatar firstName lastName');
+    }).select('friendSince')
+      .populate('friendId', 'username avatar firstName lastName')
+      .limit(limit);
 
-    // Lọc ra người còn lại (không phải mình)
-    const friendList = friends.map(item => {
-      const friend = item.userId._id.toString() === userId.toString()
-        ? item.friendId
-        : item.userId;
-      return friend;
-    });
-
-    return apiResponse(res, 200, 'Get friends successfully', { friends: friendList });
+    return apiResponse(res, 200, 'Get friends successfully', friends);
   } catch (err) {
     console.error('Get Friends Error:', err);
     return apiResponse(res, 400, 'Server error.');
