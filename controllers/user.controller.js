@@ -122,7 +122,7 @@ module.exports.removeAvatar = async (req, res) => {
   }
 }
 
-// [PATCH]: BASE_URL/api/users/remove-avatar
+// [PATCH]: BASE_URL/api/users/update-name
 module.exports.updateName = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -141,6 +141,30 @@ module.exports.updateName = async (req, res) => {
     return apiResponse(res, 200, 'Update name successfully.', update);
   } catch (e) {
     return apiResponse(res, 400, 'Failed to update name.');
+  }
+}
+
+// [PATCH]: BASE_URL/api/users/update-name
+module.exports.updateEmail = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { email } = req.body;
+
+    const update = {};
+
+    if(email === req.user.email) {
+      return apiResponse(res, 400, 'Please enter another email address.');
+    }
+
+    if(email) {
+      update.email = email;
+    }
+
+    await User.findByIdAndUpdate(userId, update);
+
+    return apiResponse(res, 200, 'Update email successfully.', update);
+  } catch (e) {
+    return apiResponse(res, 400, 'Failed to update email.');
   }
 }
 

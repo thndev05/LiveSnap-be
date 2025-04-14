@@ -37,6 +37,11 @@ router.patch('/update-name',
   controller.updateName
 );
 
+router.patch('/update-email',
+  authMiddleware.requireAuth,
+  controller.updateEmail
+);
+
 router.post('/check-email-exist',
   controller.checkEmailExist
 );
