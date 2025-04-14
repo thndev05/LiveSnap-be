@@ -168,6 +168,28 @@ module.exports.updateEmail = async (req, res) => {
   }
 }
 
+// [GET]: BASE_URL/api/users/search?username=abc
+module.exports.search = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const username = req.query.username;
+
+    if (!username) {
+      return apiResponse(res, 400, 'Username query is required.');
+    }
+
+    const users = await User.find({
+      username: { $regex: username, $options: 'i' },
+      _id: { $ne: userId }
+    }).select('username firstName lastName avatar');
+
+    return apiResponse(res, 200, 'Search users successfully.', users);
+  } catch (e) {
+    console.error('Search user error:', e);
+    return apiResponse(res, 400, 'Failed to search user.');
+  }
+};
+
 // [POST]: BASE_URL/api/users/check-email-exist
 module.exports.checkEmailExist = async (req, res) => {
   try {
