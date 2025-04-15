@@ -46,7 +46,7 @@ module.exports.login = async (req, res) => {
   });
 
   if(!user) {
-    return apiResponse(res, 400, 'Email already exists.');
+    return apiResponse(res, 400, 'Email is invald.');
   }
 
   const token = jwt.sign(
