@@ -11,9 +11,6 @@ const upload = multer({
   }
 }).any();
 
-router.post('/register', controller.register);
-
-router.post('/login', controller.login);
 
 router.get('/detail',
   authMiddleware.requireAuth,
