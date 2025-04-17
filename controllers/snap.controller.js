@@ -5,17 +5,30 @@ const Friend = require('../models/friend.model');
 // [GET]: BASE_URL/api/snaps/test
 module.exports.test = async (req, res) => {
   try {
-    const snaps = await Snap.find({
-      deleted: false
-    });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const snaps = await Snap.find({ deleted: false })
+        .skip(skip)
+        .limit(limit);
+
+    const total = await Snap.countDocuments({ deleted: false });
 
     return apiResponse(
-      res,
-      200,
-      'Get snaps successfully',
-      {
-        snaps: snaps
-      })
+        res,
+        200,
+        'Get snaps successfully',
+        {
+          snaps: snaps,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+          }
+        }
+    );
   } catch (e) {
     return apiResponse(res, 400, 'Get snaps failed');
   }
