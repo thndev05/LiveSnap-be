@@ -105,3 +105,44 @@ module.exports.loadSnaps = async (req, res) => {
     return apiResponse(res, 500, 'Failed to load snaps.');
   }
 };
+
+// [POST]: BASE_URL/api/snaps/upload
+module.exports.react = async (req, res) => {
+  try {
+    const { snapId, type } = req.body;
+    const userReactionId = req.user._id;
+
+    const snap = await Snap.findById(snapId);
+
+    if(!snap) {
+      return apiResponse(res, 400, 'Cannot find the snap');
+    }
+
+    if (snap.userId.toString() === userReactionId.toString()) {
+      return apiResponse(res, 400, 'Cannot self-react snap');
+    }
+
+    if(type) {
+      const existingReaction = snap.reactions.find(
+        (r) => r.userReactionId.toString() === userReactionId.toString()
+      );
+
+      if (existingReaction) {
+        existingReaction.type = type;
+        existingReaction.reactedAt = new Date();
+      } else {
+        snap.reactions.push({
+          userReactionId,
+          type,
+        });
+      }
+      await snap.save();
+
+      return apiResponse(res, 200, 'Reaction updated.');
+    } else {
+      return apiResponse(res, 400, 'Sent reaction is error.');
+    }
+  } catch (error) {
+    return apiResponse(res, 400, 'Server error.');
+  }
+}

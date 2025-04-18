@@ -15,6 +15,16 @@ const snapSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  reactions: [
+    {
+      userReactionId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      type: {
+        type: String,
+        enum: ['like', 'love', 'haha', 'wow', 'sad', 'angry'],
+      },
+      reactedAt: { type: Date, default: Date.now }
+    }
+  ],
   deleted: {
     type: Boolean,
     default: false

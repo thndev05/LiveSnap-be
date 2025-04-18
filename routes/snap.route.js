@@ -23,4 +23,6 @@ router.delete('/delete/:id', controller.delete);
 
 router.get('/load', controller.loadSnaps);
 
+router.post('/react', controller.react);
+
 module.exports = router;
