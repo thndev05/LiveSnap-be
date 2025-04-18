@@ -6,7 +6,6 @@ const Friend = require('../models/friend.model');
 module.exports.test = async (req, res) => {
   try {
     const currentUserId = req.user?._id?.toString();
-    console.log(req.user.email)
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
