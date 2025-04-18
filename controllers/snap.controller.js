@@ -5,34 +5,55 @@ const Friend = require('../models/friend.model');
 // [GET]: BASE_URL/api/snaps/test
 module.exports.test = async (req, res) => {
   try {
+    const currentUserId = req.user?._id?.toString();
+    console.log(req.user.email)
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     const snaps = await Snap.find({ deleted: false })
         .skip(skip)
-        .limit(limit);
+        .limit(limit)
+        .populate({
+          path: 'userId',
+          select: 'username email firstName lastName avatar',
+        });
+
+    const formattedSnaps = snaps.map(snap => {
+      const user = snap.userId;
+      const isOwner = user._id.toString() === currentUserId;
+
+      return {
+        ...snap.toObject(),
+        user: {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          avatar: user.avatar
+        },
+        isOwner,
+        userId: undefined
+      };
+    });
 
     const total = await Snap.countDocuments({ deleted: false });
 
-    return apiResponse(
-        res,
-        200,
-        'Get snaps successfully',
-        {
-          snaps: snaps,
-          pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit)
-          }
-        }
-    );
+    return apiResponse(res, 200, 'Get snaps successfully', {
+      snaps: formattedSnaps,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (e) {
     return apiResponse(res, 400, 'Get snaps failed');
   }
-}
+};
 
 // [POST]: BASE_URL/api/snaps/upload
 module.exports.upload = async (req, res) => {
