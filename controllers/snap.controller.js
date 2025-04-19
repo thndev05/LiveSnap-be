@@ -106,7 +106,11 @@ module.exports.delete = async (req, res) => {
 // [GET]: BASE_URL/api/snaps/load
 module.exports.loadSnaps = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
     const friendships = await Friend.find({
       userId: userId,
@@ -114,9 +118,9 @@ module.exports.loadSnaps = async (req, res) => {
     });
 
     const friendWithDate = friendships.map(f => {
-      const friendId = f.userId.toString() === userId.toString() ? f.friendId : f.userId;
+      const friendId = f.userId.toString() === userId ? f.friendId : f.userId;
       return {
-        friendId,
+        friendId: friendId.toString(),
         friendSince: f.friendSince
       };
     });
@@ -126,18 +130,58 @@ module.exports.loadSnaps = async (req, res) => {
       createdAt: { $gte: f.friendSince }
     }));
 
+    // Thêm snap của chính user
     snapConditions.push({ userId: userId });
 
-    const snaps = await Snap.find({ $or: snapConditions })
-      .populate('userId', 'firstName avatar')
-      .sort({ createdAt: -1 });
+    const snaps = await Snap.find({ $or: snapConditions, deleted: false })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'userId',
+        select: 'username email firstName lastName avatar'
+      });
 
-    return apiResponse(res, 200, 'Loaded snaps successfully.', snaps);
+    const formattedSnaps = snaps.map(snap => {
+      const user = snap.userId;
+      const isOwner = user._id.toString() === userId;
+
+      if (!isOwner) {
+        snap.reactions = [];
+      }
+
+      return {
+        ...snap.toObject(),
+        user: {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          avatar: user.avatar
+        },
+        isOwner,
+        userId: undefined
+      };
+    });
+
+    const total = await Snap.countDocuments({ $or: snapConditions, deleted: false });
+
+    return apiResponse(res, 200, 'Loaded snaps successfully.', {
+      snaps: formattedSnaps,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (e) {
     console.error('Load snaps error:', e);
     return apiResponse(res, 500, 'Failed to load snaps.');
   }
 };
+
 
 // [POST]: BASE_URL/api/snaps/upload
 module.exports.react = async (req, res) => {
