@@ -103,35 +103,57 @@ module.exports.delete = async (req, res) => {
   }
 }
 
-// [GET]: BASE_URL/api/snaps/load
+// [GET]: BASE_URL/api/snaps/load?userId=
 module.exports.loadSnaps = async (req, res) => {
   try {
-    const userId = req.user._id.toString();
+    const currentUserId = req.user._id.toString();
+    const targetUserId = req.query.userId
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const friendships = await Friend.find({
-      userId: userId,
-      status: 'accepted'
-    });
+    let snapConditions = [];
 
-    const friendWithDate = friendships.map(f => {
-      const friendId = f.userId.toString() === userId ? f.friendId : f.userId;
-      return {
-        friendId: friendId.toString(),
-        friendSince: f.friendSince
-      };
-    });
+    if (targetUserId) {
+      if (targetUserId === currentUserId) {
+        snapConditions.push({ userId: currentUserId });
+      } else {
+        const isFriend = await Friend.findOne({
+          userId: currentUserId,
+          friendId: targetUserId,
+          status: 'accepted'
+        });
 
-    const snapConditions = friendWithDate.map(f => ({
-      userId: f.friendId,
-      createdAt: { $gte: f.friendSince }
-    }));
+        if (!isFriend) {
+          return apiResponse(res, 403, 'You are not allowed to view snaps of this user.');
+        }
 
-    // Thêm snap của chính user
-    snapConditions.push({ userId: userId });
+        const friendSince = isFriend.friendSince;
+        snapConditions.push({ userId: targetUserId, createdAt: { $gte: friendSince } });
+      }
+    } else {
+      const friendships = await Friend.find({
+        userId: currentUserId,
+        status: 'accepted'
+      });
+
+      const friendWithDate = friendships.map(f => {
+        const friendId = f.userId.toString() === currentUserId ? f.friendId : f.userId;
+        return {
+          friendId: friendId.toString(),
+          friendSince: f.friendSince
+        };
+      });
+
+      snapConditions = friendWithDate.map(f => ({
+        userId: f.friendId,
+        createdAt: { $gte: f.friendSince }
+      }));
+
+      // Thêm snap của chính user
+      snapConditions.push({ userId: currentUserId });
+    }
 
     const snaps = await Snap.find({ $or: snapConditions, deleted: false })
       .skip(skip)
@@ -144,7 +166,7 @@ module.exports.loadSnaps = async (req, res) => {
 
     const formattedSnaps = snaps.map(snap => {
       const user = snap.userId;
-      const isOwner = user._id.toString() === userId;
+      const isOwner = user._id.toString() === currentUserId;
 
       if (!isOwner) {
         snap.reactions = [];
@@ -181,6 +203,7 @@ module.exports.loadSnaps = async (req, res) => {
     return apiResponse(res, 500, 'Failed to load snaps.');
   }
 };
+
 
 
 // [POST]: BASE_URL/api/snaps/upload
