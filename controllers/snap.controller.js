@@ -209,7 +209,7 @@ module.exports.loadSnaps = async (req, res) => {
 // [POST]: BASE_URL/api/snaps/upload
 module.exports.react = async (req, res) => {
   try {
-    const { snapId, type } = req.body;
+    const { snapId, emoji } = req.body;
     const userReactionId = req.user._id;
 
     const snap = await Snap.findById(snapId);
@@ -222,18 +222,18 @@ module.exports.react = async (req, res) => {
       return apiResponse(res, 400, 'Cannot self-react snap');
     }
 
-    if(type) {
+    if(emoji) {
       const existingReaction = snap.reactions.find(
         (r) => r.userReactionId.toString() === userReactionId.toString()
       );
 
       if (existingReaction) {
-        existingReaction.type = type;
+        existingReaction.emoji = emoji;
         existingReaction.reactedAt = new Date();
       } else {
         snap.reactions.push({
           userReactionId,
-          type,
+          emoji,
         });
       }
       await snap.save();
