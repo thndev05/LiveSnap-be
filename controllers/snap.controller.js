@@ -268,3 +268,64 @@ module.exports.react = async (req, res) => {
     return apiResponse(res, 400, 'Server error.');
   }
 }
+
+// [GET]: BASE_URL/api/snaps/:id
+module.exports.getSnapById = async (req, res) => {
+  try {
+    const currentUserId = req.user?._id?.toString();
+    const snapId = req.params.id;
+
+    const snap = await Snap.findOne({ _id: snapId, deleted: false })
+        .populate({
+          path: 'userId',
+          select: 'username email firstName lastName avatar',
+        })
+        .populate({
+          path: 'reactions.userReactionId',
+          select: 'username email firstName lastName avatar',
+        });
+
+    if (!snap) {
+      return apiResponse(res, 404, 'Snap not found');
+    }
+
+    const user = snap.userId;
+    const isOwner = user._id.toString() === currentUserId;
+
+    const formattedReactions = snap.reactions.map(r => ({
+      _id: r._id,
+      emoji: r.emoji,
+      reactedAt: r.reactedAt,
+      user: r.userReactionId
+          ? {
+            _id: r.userReactionId._id,
+            username: r.userReactionId.username,
+            email: r.userReactionId.email,
+            firstName: r.userReactionId.firstName,
+            lastName: r.userReactionId.lastName,
+            avatar: r.userReactionId.avatar,
+          }
+          : null
+    }));
+
+    const formattedSnap = {
+      ...snap.toObject(),
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar
+      },
+      reactions: formattedReactions,
+      isOwner,
+      userId: undefined
+    };
+
+    return apiResponse(res, 200, 'Get snap successfully', formattedSnap);
+  } catch (e) {
+    console.error(e);
+    return apiResponse(res, 400, 'Get snap failed');
+  }
+};

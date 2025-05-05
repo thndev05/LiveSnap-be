@@ -25,4 +25,6 @@ router.get('/load', controller.loadSnaps);
 
 router.post('/react', controller.react);
 
+router.get('/:id', controller.getSnapById);
+
 module.exports = router;
