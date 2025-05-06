@@ -77,21 +77,43 @@ module.exports.getOutgoingFriendRequest = async (req, res) => {
 module.exports.getFriendList = async (req, res) => {
   try {
     const userId = req.user._id;
-    const limit = parseInt(req.query.limit);
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = parseInt(req.query.offset) || 0;
 
     const friends = await Friend.find({
-      userId: userId,
-      status: 'accepted'
-    }).select('friendSince')
-      .populate('friendId', 'username avatar firstName lastName')
-      .limit(limit);
+      status: 'accepted',
+      $or: [
+        { userId: userId },
+        { friendId: userId }
+      ]
+    })
+        .select('userId friendId friendSince')
+        .populate('userId', 'username avatar firstName lastName')
+        .populate('friendId', 'username avatar firstName lastName')
+        .skip(offset)
+        .limit(limit);
 
-    return apiResponse(res, 200, 'Get friends successfully', friends);
+    const formattedFriends = friends.map(friend => {
+      const isCurrentUserUserId = String(friend.userId._id) === String(userId);
+      const other = isCurrentUserUserId ? friend.friendId : friend.userId;
+
+      return {
+        id: other._id,
+        username: other.username,
+        avatar: other.avatar,
+        firstName: other.firstName,
+        lastName: other.lastName,
+        friendSince: friend.friendSince
+      };
+    });
+
+    return apiResponse(res, 200, 'Get friends successfully', formattedFriends);
   } catch (err) {
     console.error('Get Friends Error:', err);
-    return apiResponse(res, 400, 'Server error.');
+    return apiResponse(res, 500, 'Server error.');
   }
 };
+
 
 // [POST] /api/friends/accept/:friendId
 module.exports.acceptFriendRequest = async (req, res) => {
