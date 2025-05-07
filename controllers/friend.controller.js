@@ -49,7 +49,7 @@ module.exports.getIncomingFriendRequest = async (req, res) => {
         .populate('userId', 'username avatar firstName lastName');
 
     const formattedRequests = requests.map((req) => ({
-      requestId: req._id,
+      id: req._id,
       user: {
         id: req.userId._id,
         username: req.userId.username,
@@ -78,15 +78,31 @@ module.exports.getOutgoingFriendRequest = async (req, res) => {
     const requests = await Friend.find({
       userId,
       status: 'pending'
-    }).select('userId')
-      .populate('friendId', 'username avatar firstName lastName');
+    })
+        .select('userId friendId')
+        .populate('friendId', 'username avatar firstName lastName');
 
-    return apiResponse(res, 200, 'Outgoing friend requests fetched.', { requests });
+    const formattedRequests = requests.map(req => {
+      const obj = req.toObject();
+      return {
+        id: obj._id,
+        user: obj.friendId ? {
+          id: obj.friendId._id,
+          username: obj.friendId.username,
+          firstName: obj.friendId.firstName,
+          lastName: obj.friendId.lastName,
+          avatar: obj.friendId.avatar,
+        } : null
+      };
+    });
+
+    return apiResponse(res, 200, 'Outgoing friend requests fetched.', { requests: formattedRequests });
   } catch (err) {
     console.error('Get Outgoing Friend Requests Error:', err);
     return apiResponse(res, 500, 'Server error.');
   }
 };
+
 
 // [GET]: BASE_URL/api/friends/list
 module.exports.getFriendList = async (req, res) => {
