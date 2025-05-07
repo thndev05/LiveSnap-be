@@ -16,11 +16,11 @@ module.exports.test = async (req, res) => {
         .limit(limit)
         .populate({
           path: 'userId',
-          select: 'username email firstName lastName avatar',
+          select: 'username firstName lastName avatar',
         })
         .populate({
           path: 'reactions.userReactionId',
-          select: 'username email firstName lastName avatar',
+          select: 'username firstName lastName avatar',
         })
     ;
 
@@ -183,7 +183,7 @@ module.exports.loadSnaps = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate({
         path: 'userId',
-        select: 'username email firstName lastName avatar'
+        select: 'username firstName lastName avatar'
       });
 
     const formattedSnaps = snaps.map(snap => {
@@ -278,11 +278,11 @@ module.exports.getSnapById = async (req, res) => {
     const snap = await Snap.findOne({ _id: snapId, deleted: false })
         .populate({
           path: 'userId',
-          select: 'username email firstName lastName avatar',
+          select: 'username firstName lastName avatar',
         })
         .populate({
           path: 'reactions.userReactionId',
-          select: 'username email firstName lastName avatar',
+          select: 'username firstName lastName avatar',
         });
 
     if (!snap) {
