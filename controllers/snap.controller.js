@@ -21,20 +21,19 @@ module.exports.test = async (req, res) => {
         .populate({
           path: 'reactions.userReactionId',
           select: 'username firstName lastName avatar',
-        })
-    ;
+        });
 
     const formattedSnaps = snaps.map(snap => {
       const user = snap.userId;
       const isOwner = user._id.toString() === currentUserId;
 
       const formattedReactions = snap.reactions.map(r => ({
-        _id: r._id,
+        id: r._id, // Replace _id with id
         emoji: r.emoji,
         reactedAt: r.reactedAt,
         user: r.userReactionId
             ? {
-              _id: r.userReactionId._id,
+              id: r.userReactionId._id, // Replace _id with id
               username: r.userReactionId.username,
               email: r.userReactionId.email,
               firstName: r.userReactionId.firstName,
@@ -45,18 +44,21 @@ module.exports.test = async (req, res) => {
       }));
 
       return {
-        ...snap.toObject(),
+        id: snap._id, // Replace _id with id
         user: {
-          _id: user._id,
+          id: user._id, // Replace _id with id
           username: user.username,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          avatar: user.avatar
+          avatar: user.avatar,
         },
         reactions: formattedReactions,
         isOwner,
-        userId: undefined
+        userId: undefined,
+        caption: snap.caption,
+        image: snap.image,
+        createdAt: snap.createdAt,
       };
     });
 
@@ -68,7 +70,7 @@ module.exports.test = async (req, res) => {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
+        totalPages: Math.ceil(total / limit),
       }
     });
   } catch (e) {
@@ -92,16 +94,23 @@ module.exports.upload = async (req, res) => {
       caption: caption,
       image: image
     }
+
     const newSnap = new Snap(data);
     await newSnap.save();
 
-    return apiResponse(res, 200, 'Upload snap successfully.', newSnap);
+    const snapObj = newSnap.toObject();
+    snapObj.id = snapObj._id;
+    delete snapObj._id;
+    delete snapObj.__v;
+
+    return apiResponse(res, 200, 'Upload snap successfully.', snapObj);
 
   } catch (error) {
     console.error('Upload Snap Error:', error);
-    return apiResponse(res, 200, 'Server error.');
+    return apiResponse(res, 500, 'Server error.');
   }
 }
+
 
 // [DELETE]: BASE_URL/api/snaps/delete/:id
 module.exports.delete = async (req, res) => {
@@ -278,49 +287,55 @@ module.exports.getSnapById = async (req, res) => {
     const snap = await Snap.findOne({ _id: snapId, deleted: false })
         .populate({
           path: 'userId',
-          select: 'username firstName lastName avatar',
+          select: 'username firstName lastName avatar email', // Thêm email nếu cần
         })
         .populate({
           path: 'reactions.userReactionId',
-          select: 'username firstName lastName avatar',
+          select: 'username firstName lastName avatar email',
         });
 
     if (!snap) {
       return apiResponse(res, 404, 'Snap not found');
     }
 
-    const user = snap.userId;
+    const snapObj = snap.toObject();
+    const user = snapObj.userId;
     const isOwner = user._id.toString() === currentUserId;
 
-    const formattedReactions = snap.reactions.map(r => ({
-      _id: r._id,
+    const formattedUser = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatar: user.avatar,
+    };
+
+    const formattedReactions = snapObj.reactions.map(r => ({
+      id: r._id,
       emoji: r.emoji,
       reactedAt: r.reactedAt,
       user: r.userReactionId
           ? {
-            _id: r.userReactionId._id,
+            id: r.userReactionId._id,
             username: r.userReactionId.username,
             email: r.userReactionId.email,
             firstName: r.userReactionId.firstName,
             lastName: r.userReactionId.lastName,
             avatar: r.userReactionId.avatar,
           }
-          : null
+          : null,
     }));
 
     const formattedSnap = {
-      ...snap.toObject(),
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        avatar: user.avatar
-      },
+      id: snapObj._id,
+      caption: snapObj.caption,
+      image: snapObj.image,
+      createdAt: snapObj.createdAt,
+      updatedAt: snapObj.updatedAt,
       reactions: formattedReactions,
+      user: formattedUser,
       isOwner,
-      userId: undefined
     };
 
     return apiResponse(res, 200, 'Get snap successfully', formattedSnap);

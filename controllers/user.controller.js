@@ -5,13 +5,25 @@ const apiResponse = require('../helpers/response');
 // [GET]: BASE_URL/api/users/detail
 module.exports.detail = async (req, res) => {
   try {
+    const user = req.user;
+
+    const userInfo = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
+
     return apiResponse(res, 200, 'Get detail successfully', {
-      info: req.user
-    })
+      info: userInfo
+    });
   } catch (err) {
+    console.error('Get User Detail Error:', err);
     return apiResponse(res, 400, 'Get detail failed');
   }
-}
+};
 
 // [POST]: BASE_URL/api/users/set-avatar
 module.exports.setAvatar = async (req, res) => {

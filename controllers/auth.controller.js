@@ -42,32 +42,41 @@ module.exports.register = async (req, res) => {
 module.exports.login = async (req, res) => {
   let { email, password } = req.body;
 
-  const user = await User.findOne({
-    email: email,
-  });
+  const user = await User.findOne({ email });
 
-  if(!user) {
-    return apiResponse(res, 400, 'Email is invald.');
+  if (!user) {
+    return apiResponse(res, 400, 'Email is invalid.');
+  }
+
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+  if (!isPasswordCorrect) {
+    return apiResponse(res, 400, 'Password does not match.');
   }
 
   const jti = uuidv4();
   const token = jwt.sign(
-    { userId: user._id, jti },
-    process.env.JWT_SECRET_KEY,
-    { expiresIn: "30d" }
+      { userId: user._id, jti },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "30d" }
   );
-
-  if(!await bcrypt.compare(password, user.password)) {
-    return apiResponse(res, 400, 'Password does not match.');
-  }
 
   res.cookie("token", token);
 
+  const userData = {
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    avatar: user.avatar,
+    firstName: user.firstName,
+    lastName: user.lastName,
+  };
+
   return apiResponse(res, 200, 'Login successfully.', {
     token,
-    user
+    user: userData
   });
-}
+};
+
 
 
 module.exports.logout = async (req, res) => {
