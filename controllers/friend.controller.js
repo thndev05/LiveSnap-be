@@ -24,7 +24,11 @@ module.exports.sendFriendRequest = async (req, res) => {
     });
 
     if (exists) {
-      return apiResponse(res, 400, 'Friend request already sent or already friends.');
+      if (exists.status === 'accepted') {
+        return apiResponse(res, 400, 'You are already friends.');
+      } else {
+        return apiResponse(res, 400, 'Friend request already sent.');
+      }
     }
 
     const request = new Friend({ userId, friendId });

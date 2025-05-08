@@ -115,11 +115,12 @@ module.exports.updateEmail = async (req, res) => {
   }
 }
 
-// [GET]: BASE_URL/api/users/search?username=abc
+// [GET]: BASE_URL/api/users/search?username=abc?limit=3
 module.exports.search = async (req, res) => {
   try {
     const userId = req.user._id;
     const username = req.query.username;
+    const limit = Math.min(parseInt(req.query.limit) || 3, 10);
 
     if (!username) {
       return apiResponse(res, 400, 'Username query is required.');
@@ -128,9 +129,22 @@ module.exports.search = async (req, res) => {
     const users = await User.find({
       username: { $regex: username, $options: 'i' },
       _id: { $ne: userId }
-    }).select('username firstName lastName avatar');
+    })
+        .select('username firstName lastName avatar')
+        .limit(limit);
 
-    return apiResponse(res, 200, 'Search users successfully.', users);
+    const formattedUsers = users.map(user => {
+      const u = user.toObject();
+      return {
+        id: u._id,
+        username: u.username,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        avatar: u.avatar,
+      };
+    });
+
+    return apiResponse(res, 200, 'Search users successfully.', formattedUsers);
   } catch (e) {
     console.error('Search user error:', e);
     return apiResponse(res, 400, 'Failed to search user.');
