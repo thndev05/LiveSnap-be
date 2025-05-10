@@ -52,5 +52,10 @@ router.post('/check-username-exist',
   controller.checkUsernameExist
 );
 
+router.post('/check-password',
+  authMiddleware.requireAuth,
+  controller.checkPassword
+);
+
 
 module.exports = router;

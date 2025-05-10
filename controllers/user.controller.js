@@ -1,5 +1,6 @@
 const User = require('../models/user.model');
 const cloudinary = require('cloudinary').v2;
+const bcrypt = require('bcrypt');
 const apiResponse = require('../helpers/response');
 
 // [GET]: BASE_URL/api/users/detail
@@ -91,7 +92,7 @@ module.exports.updateName = async (req, res) => {
   }
 }
 
-// [PATCH]: BASE_URL/api/users/update-name
+// [PATCH]: BASE_URL/api/users/update-email
 module.exports.updateEmail = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -228,8 +229,8 @@ module.exports.checkPassword = async (req, res) => {
         message: 'Password is correct.'
       });
     } else {
-      return res.json({
-        code: 200,
+      return res.status(400).json({
+        code: 400,
         isValid: false,
         message: 'Password is incorrect.'
       });
