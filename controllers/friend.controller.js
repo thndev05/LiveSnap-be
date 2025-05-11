@@ -167,8 +167,7 @@ module.exports.acceptFriendRequest = async (req, res) => {
     }
 
     request.status = 'accepted';
-    request.friendSinceTime = new Date();
-    request.friendSince = friendSinceTime;
+    request.friendSince = new Date();
     await request.save();
 
     return apiResponse(res, 200, 'Friend request accepted.');
