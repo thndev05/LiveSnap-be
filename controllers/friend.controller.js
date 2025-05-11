@@ -167,23 +167,9 @@ module.exports.acceptFriendRequest = async (req, res) => {
     }
 
     request.status = 'accepted';
-    const friendSinceTime = new Date();
+    request.friendSinceTime = new Date();
     request.friendSince = friendSinceTime;
     await request.save();
-
-    const exists = await Friend.findOne({
-      userId: userId,
-      friendId: friendId
-    });
-
-    if (!exists) {
-      await new Friend({
-        userId: userId,
-        friendId: friendId,
-        status: 'accepted',
-        friendSince: friendSinceTime
-      }).save();
-    }
 
     return apiResponse(res, 200, 'Friend request accepted.');
   } catch (error) {
