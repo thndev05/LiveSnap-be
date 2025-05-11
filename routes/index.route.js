@@ -6,16 +6,18 @@ const authRoute = require('./auth.route');
 const authMiddleware = require('../middlewares/auth.middleware');
 
 module.exports = (app) => {
-  app.use('/api/auth', authRoute);
+  const version = '/v1';
 
-  app.use('/api/users', userRoute);
+  app.use(version + '/auth', authRoute);
 
-  app.use('/api/snaps',
+  app.use(version+ '/users', userRoute);
+
+  app.use(version+ '/snaps',
     authMiddleware.requireAuth,
     snapRoute
   );
 
-  app.use('/api/friends',
+  app.use(version+ '/friends',
     authMiddleware.requireAuth,
     friendRoute
   );
