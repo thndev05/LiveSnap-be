@@ -205,29 +205,68 @@ module.exports.checkUsernameExist = async (req, res) => {
 
 // [GET]: BASE_URL/api/users/:id
 module.exports.getUserById = async (req, res) => {
-  try {
-    const userId = req.params.id;
+    try {
+        const userId = req.params.id;
 
-    const user = await User.findById(userId).select('username email avatar firstName lastName');
+        const user = await User.findById(userId).select('username email avatar firstName lastName');
 
-    if (!user) {
-      return apiResponse(res, 404, 'User not found.');
+        if (!user) {
+            return apiResponse(res, 404, 'User not found.');
+        }
+
+        const userInfo = {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            avatar: user.avatar,
+            firstName: user.firstName,
+            lastName: user.lastName,
+        };
+
+        return apiResponse(res, 200, 'Get user by ID successfully.', {
+            info: userInfo
+        });
+    } catch (err) {
+        console.error('Get User By ID Error:', err);
+        return apiResponse(res, 400, 'Failed to get user by ID.');
     }
-
-    const userInfo = {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      avatar: user.avatar,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    };
-
-    return apiResponse(res, 200, 'Get user by ID successfully.', {
-      info: userInfo
-    });
-  } catch (err) {
-    console.error('Get User By ID Error:', err);
-    return apiResponse(res, 400, 'Failed to get user by ID.');
-  }
 };
+
+
+// [POST]: BASE_URL/api/users/check-password
+module.exports.checkPassword = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { password } = req.body;
+
+        if (!password) {
+            return apiResponse(res, 400, 'Password is required.');
+        }
+
+        const user = await User.findById(userId).select('password');
+
+        if (!user) {
+            return apiResponse(res, 404, 'User not found.');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (isMatch) {
+            return res.json({
+                code: 200,
+                isValid: true,
+                message: 'Password is correct.'
+            });
+        } else {
+            return res.status(400).json({
+                code: 400,
+                isValid: false,
+                message: 'Password is incorrect.'
+            });
+        }
+    } catch (e) {
+        console.error('Check password error:', e);
+        return apiResponse(res, 400, 'Failed to check password.');
+    }
+};
+
