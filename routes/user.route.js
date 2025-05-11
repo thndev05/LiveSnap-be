@@ -52,9 +52,11 @@ router.post('/check-username-exist',
   controller.checkUsernameExist
 );
 
+router.get('/:id', controller.getUserById);
+
 router.post('/check-password',
-  authMiddleware.requireAuth,
-  controller.checkPassword
+    authMiddleware.requireAuth,
+    controller.checkPassword
 );
 
 
