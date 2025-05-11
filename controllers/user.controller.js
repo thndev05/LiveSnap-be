@@ -202,3 +202,32 @@ module.exports.checkUsernameExist = async (req, res) => {
     return apiResponse(res, 400, 'Failed to check exist email.');
   }
 }
+
+// [GET]: BASE_URL/api/users/:id
+module.exports.getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findById(userId).select('username email avatar firstName lastName');
+
+    if (!user) {
+      return apiResponse(res, 404, 'User not found.');
+    }
+
+    const userInfo = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
+
+    return apiResponse(res, 200, 'Get user by ID successfully.', {
+      info: userInfo
+    });
+  } catch (err) {
+    console.error('Get User By ID Error:', err);
+    return apiResponse(res, 400, 'Failed to get user by ID.');
+  }
+};

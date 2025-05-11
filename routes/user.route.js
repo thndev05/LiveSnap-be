@@ -52,5 +52,7 @@ router.post('/check-username-exist',
   controller.checkUsernameExist
 );
 
+router.get('/:id', controller.getUserById);
+
 
 module.exports = router;
