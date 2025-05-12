@@ -1,5 +1,6 @@
 const Friend = require('../models/friend.model');
 const apiResponse = require('../helpers/response');
+const FirebaseService = require('../services/firebase.service');
 
 // [POST]: BASE_URL/api/friends/request/:id
 module.exports.sendFriendRequest = async (req, res) => {
@@ -33,6 +34,9 @@ module.exports.sendFriendRequest = async (req, res) => {
 
     const request = new Friend({ userId, friendId });
     await request.save();
+
+    // Gửi thông báo cho người nhận yêu cầu kết bạn
+    await FirebaseService.sendFriendRequestNotification(userId, friendId);
 
     return apiResponse(res, 200, 'Friend request sent successfully.');
   } catch (err) {
@@ -169,6 +173,9 @@ module.exports.acceptFriendRequest = async (req, res) => {
     request.status = 'accepted';
     request.friendSince = new Date();
     await request.save();
+
+    // Gửi thông báo cho người gửi yêu cầu kết bạn
+    await FirebaseService.sendFriendRequestAcceptedNotification(userId, friendId);
 
     return apiResponse(res, 200, 'Friend request accepted.');
   } catch (error) {

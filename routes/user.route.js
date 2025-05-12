@@ -59,5 +59,6 @@ router.post('/check-password',
     controller.checkPassword
 );
 
+router.post('/fcm-token', authMiddleware.requireAuth, controller.updateFcmToken);
 
 module.exports = router;

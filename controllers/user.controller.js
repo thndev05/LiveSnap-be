@@ -270,3 +270,30 @@ module.exports.checkPassword = async (req, res) => {
     }
 };
 
+// [POST] /api/users/fcm-token
+module.exports.updateFcmToken = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { fcmToken } = req.body;
+
+    if (!fcmToken) {
+      return apiResponse(res, 400, 'FCM token is required');
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { fcmToken },
+      { new: true }
+    );
+
+    if (!user) {
+      return apiResponse(res, 404, 'User not found');
+    }
+
+    return apiResponse(res, 200, 'FCM token updated successfully');
+  } catch (error) {
+    console.error('Update FCM Token Error:', error);
+    return apiResponse(res, 500, 'Server error');
+  }
+};
+
