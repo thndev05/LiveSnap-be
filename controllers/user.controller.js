@@ -115,6 +115,32 @@ module.exports.updateEmail = async (req, res) => {
   }
 }
 
+// [PATCH]: BASE_URL/api/users/update-username
+module.exports.updateUsername = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { username } = req.body;
+
+    if (username === req.user.username) {
+      return apiResponse(res, 400, 'Please enter another username.');
+    }
+
+    const existingUser = await User.findOne({ username: username });
+    if (existingUser) {
+      return apiResponse(res, 400, 'Username is already taken.');
+    }
+
+    const update = { username };
+    await User.findByIdAndUpdate(userId, update);
+
+    return apiResponse(res, 200, 'Update username successfully.', update);
+  } catch (e) {
+    console.error(e);
+    return apiResponse(res, 400, 'Failed to update username.');
+  }
+};
+
+
 // [GET]: BASE_URL/api/users/search?username=abc?limit=3
 module.exports.search = async (req, res) => {
   try {

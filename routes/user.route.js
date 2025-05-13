@@ -34,6 +34,11 @@ router.patch('/update-name',
   controller.updateName
 );
 
+router.patch('/update-username',
+  authMiddleware.requireAuth,
+  controller.updateUsername
+);
+
 router.patch('/update-email',
   authMiddleware.requireAuth,
   controller.updateEmail
