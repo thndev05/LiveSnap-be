@@ -119,7 +119,8 @@ module.exports.updateEmail = async (req, res) => {
 module.exports.updateUsername = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { username } = req.body;
+    const rawUsername = req.body.username;
+    const username = rawUsername.trim().replace(/\s+/g, '');
 
     if (username === req.user.username) {
       return apiResponse(res, 400, 'Please enter another username.');
