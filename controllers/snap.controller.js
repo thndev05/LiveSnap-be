@@ -170,7 +170,7 @@ module.exports.loadSnaps = async (req, res) => {
       const friendships = await Friend.find({
         $or: [
           { userId: currentUserId },
-          { friendId: currentUserId }
+          { friendId: currentUserId },
         ],
         status: 'accepted'
       });
