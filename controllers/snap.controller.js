@@ -138,7 +138,7 @@ module.exports.delete = async (req, res) => {
 module.exports.loadSnaps = async (req, res) => {
   try {
     const currentUserId = req.user._id.toString();
-    const targetUserId = req.query.userId
+    const targetUserId = req.query.userId;
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -182,7 +182,7 @@ module.exports.loadSnaps = async (req, res) => {
         createdAt: { $gte: f.friendSince }
       }));
 
-      // Thêm snap của chính user
+      // Add user's own snaps
       snapConditions.push({ userId: currentUserId });
     }
 
@@ -193,28 +193,48 @@ module.exports.loadSnaps = async (req, res) => {
       .populate({
         path: 'userId',
         select: 'username firstName lastName avatar'
+      })
+      .populate({
+        path: 'reactions.userReactionId',
+        select: 'username firstName lastName avatar'
       });
 
     const formattedSnaps = snaps.map(snap => {
       const user = snap.userId;
       const isOwner = user._id.toString() === currentUserId;
 
-      if (!isOwner) {
-        snap.reactions = [];
-      }
+      const formattedReactions = snap.reactions.map(r => ({
+        id: r._id,
+        emoji: r.emoji,
+        reactedAt: r.reactedAt,
+        user: r.userReactionId
+          ? {
+            id: r.userReactionId._id,
+            username: r.userReactionId.username,
+            email: r.userReactionId.email,
+            firstName: r.userReactionId.firstName,
+            lastName: r.userReactionId.lastName,
+            avatar: r.userReactionId.avatar,
+          }
+          : null
+      }));
 
       return {
-        ...snap.toObject(),
+        id: snap._id,
         user: {
-          _id: user._id,
+          id: user._id,
           username: user.username,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          avatar: user.avatar
+          avatar: user.avatar,
         },
+        reactions: formattedReactions,
         isOwner,
-        userId: undefined
+        userId: undefined,
+        caption: snap.caption,
+        image: snap.image,
+        createdAt: snap.createdAt,
       };
     });
 
