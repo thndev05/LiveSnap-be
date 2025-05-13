@@ -72,6 +72,25 @@ class FirebaseService {
       console.error('Error sending friend request accepted notification:', error);
     }
   }
+
+  static async sendSnapReactionNotification(reactorId, snapOwnerId, emoji) {
+    try {
+      const reactor = await User.findById(reactorId);
+      if (!reactor) return;
+
+      const title = 'New Snap Reaction';
+      const body = `${reactor.firstName} ${reactor.lastName} reacted ${emoji} to your snap`;
+      const data = {
+        type: 'SNAP_REACTION',
+        reactorId: reactorId.toString(),
+        emoji: emoji
+      };
+
+      await this.sendNotification(snapOwnerId, title, body, data);
+    } catch (error) {
+      console.error('Error sending snap reaction notification:', error);
+    }
+  }
 }
 
 module.exports = FirebaseService; 

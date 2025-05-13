@@ -1,6 +1,7 @@
 const Snap = require('../models/snap.model');
 const apiResponse = require('../helpers/response');
 const Friend = require('../models/friend.model');
+const FirebaseService = require('../services/firebase.service');
 
 // [GET]: BASE_URL/api/snaps/test
 module.exports.test = async (req, res) => {
@@ -288,6 +289,9 @@ module.exports.react = async (req, res) => {
         });
       }
       await snap.save();
+
+      // Send notification to snap owner
+      await FirebaseService.sendSnapReactionNotification(userReactionId, snap.userId, emoji);
 
       return apiResponse(res, 200, 'Reaction updated.');
     } else {
