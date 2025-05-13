@@ -152,8 +152,10 @@ module.exports.loadSnaps = async (req, res) => {
         snapConditions.push({ userId: currentUserId });
       } else {
         const isFriend = await Friend.findOne({
-          userId: currentUserId,
-          friendId: targetUserId,
+          $or: [
+            { userId: currentUserId, friendId: targetUserId },
+            { userId: targetUserId, friendId: currentUserId }
+          ],
           status: 'accepted'
         });
 
@@ -166,7 +168,10 @@ module.exports.loadSnaps = async (req, res) => {
       }
     } else {
       const friendships = await Friend.find({
-        userId: currentUserId,
+        $or: [
+          { userId: currentUserId },
+          { friendId: currentUserId }
+        ],
         status: 'accepted'
       });
 
