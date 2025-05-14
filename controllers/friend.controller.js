@@ -256,3 +256,101 @@ module.exports.unfriend = async (req, res) => {
     return apiResponse(res, 400, 'Server error.');
   }
 };
+
+// [GET]: /api/friends/suggestions
+module.exports.getFriendSuggestions = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const limit = 5;
+
+    // Lấy danh sách bạn bè hiện tại của user
+    const userFriends = await Friend.find({
+      status: 'accepted',
+      $or: [
+        { userId: userId },
+        { friendId: userId }
+      ]
+    });
+
+    // Tạo mảng chứa ID của tất cả bạn bè
+    const friendIds = userFriends.map(friend => 
+      String(friend.userId) === String(userId) ? friend.friendId : friend.userId
+    );
+
+    // Tìm tất cả bạn bè của bạn bè (friends of friends)
+    const friendsOfFriends = await Friend.find({
+      status: 'accepted',
+      $or: [
+        { userId: { $in: friendIds } },
+        { friendId: { $in: friendIds } }
+      ]
+    });
+
+    // Tạo map để đếm số bạn chung
+    const mutualFriendsCount = new Map();
+    
+    friendsOfFriends.forEach(fof => {
+      const potentialFriendId = String(fof.userId) === String(friendIds[0]) ? fof.friendId : fof.userId;
+      
+      // Bỏ qua nếu là chính user hoặc đã là bạn
+      if (String(potentialFriendId) === String(userId) || friendIds.includes(String(potentialFriendId))) {
+        return;
+      }
+
+      mutualFriendsCount.set(
+        String(potentialFriendId),
+        (mutualFriendsCount.get(String(potentialFriendId)) || 0) + 1
+      );
+    });
+
+    // Chuyển map thành mảng và sắp xếp theo số bạn chung
+    const suggestions = Array.from(mutualFriendsCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => id);
+
+    // Lấy thông tin chi tiết của các user được gợi ý
+    const suggestedUsers = await Friend.find({
+      $or: [
+        { userId: { $in: suggestions } },
+        { friendId: { $in: suggestions } }
+      ],
+      status: 'accepted'
+    })
+    .populate('userId', 'username avatar firstName lastName')
+    .populate('friendId', 'username avatar firstName lastName');
+
+    // Format kết quả và loại bỏ những người đã là bạn
+    const formattedSuggestions = suggestions
+      .map(suggestedId => {
+        const user = suggestedUsers.find(u => 
+          String(u.userId._id) === String(suggestedId) || String(u.friendId._id) === String(suggestedId)
+        );
+        
+        if (!user) return null;
+        
+        const userInfo = String(user.userId._id) === String(suggestedId) ? user.userId : user.friendId;
+        
+        // Kiểm tra xem người dùng này đã là bạn chưa
+        const isAlreadyFriend = friendIds.includes(String(userInfo._id));
+        if (isAlreadyFriend) return null;
+        
+        return {
+          user: {
+            id: userInfo._id,
+            username: userInfo.username,
+            avatar: userInfo.avatar,
+            firstName: userInfo.firstName,
+            lastName: userInfo.lastName
+          },
+          mutualFriends: mutualFriendsCount.get(String(suggestedId))
+        };
+      })
+      .filter(Boolean); // Loại bỏ các giá trị null
+
+    return apiResponse(res, 200, 'Friend suggestions fetched successfully', formattedSuggestions);
+  } catch (err) {
+    console.error('Get Friend Suggestions Error:', err);
+    return apiResponse(res, 500, 'Server error.');
+  }
+};

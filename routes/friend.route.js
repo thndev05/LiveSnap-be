@@ -15,4 +15,6 @@ router.post('/reject/:id', controller.rejectFriendRequest);
 
 router.delete('/remove/:id', controller.unfriend);
 
+router.get('/suggestions', controller.getFriendSuggestions);
+
 module.exports = router;
