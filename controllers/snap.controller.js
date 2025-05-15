@@ -17,11 +17,11 @@ module.exports.test = async (req, res) => {
         .limit(limit)
         .populate({
           path: 'userId',
-          select: 'username firstName lastName avatar',
+          select: 'username firstName lastName avatar isGold',
         })
         .populate({
           path: 'reactions.userReactionId',
-          select: 'username firstName lastName avatar',
+          select: 'username firstName lastName avatar isGold',
         });
 
     const formattedSnaps = snaps.map(snap => {
@@ -29,30 +29,32 @@ module.exports.test = async (req, res) => {
       const isOwner = user._id.toString() === currentUserId;
 
       const formattedReactions = snap.reactions.map(r => ({
-        id: r._id, // Replace _id with id
+        id: r._id,
         emoji: r.emoji,
         reactedAt: r.reactedAt,
         user: r.userReactionId
             ? {
-              id: r.userReactionId._id, // Replace _id with id
+              id: r.userReactionId._id,
               username: r.userReactionId.username,
               email: r.userReactionId.email,
               firstName: r.userReactionId.firstName,
               lastName: r.userReactionId.lastName,
               avatar: r.userReactionId.avatar,
+              isGold: r.userReactionId.isGold
             }
             : null
       }));
 
       return {
-        id: snap._id, // Replace _id with id
+        id: snap._id,
         user: {
-          id: user._id, // Replace _id with id
+          id: user._id,
           username: user.username,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
           avatar: user.avatar,
+          isGold: user.isGold
         },
         reactions: formattedReactions,
         isOwner,
@@ -198,11 +200,11 @@ module.exports.loadSnaps = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate({
         path: 'userId',
-        select: 'username firstName lastName avatar'
+        select: 'username firstName lastName avatar isGold'
       })
       .populate({
         path: 'reactions.userReactionId',
-        select: 'username firstName lastName avatar'
+        select: 'username firstName lastName avatar isGold'
       });
 
     const formattedSnaps = snaps.map(snap => {
@@ -221,6 +223,7 @@ module.exports.loadSnaps = async (req, res) => {
             firstName: r.userReactionId.firstName,
             lastName: r.userReactionId.lastName,
             avatar: r.userReactionId.avatar,
+            isGold: r.userReactionId.isGold
           }
           : null
       }));
@@ -234,6 +237,7 @@ module.exports.loadSnaps = async (req, res) => {
           firstName: user.firstName,
           lastName: user.lastName,
           avatar: user.avatar,
+          isGold: user.isGold
         },
         reactions: formattedReactions,
         isOwner,
@@ -316,11 +320,11 @@ module.exports.getSnapById = async (req, res) => {
     const snap = await Snap.findOne({ _id: snapId, deleted: false })
         .populate({
           path: 'userId',
-          select: 'username firstName lastName avatar email', // Thêm email nếu cần
+          select: 'username firstName lastName avatar email isGold', // Thêm email nếu cần
         })
         .populate({
           path: 'reactions.userReactionId',
-          select: 'username firstName lastName avatar email',
+          select: 'username firstName lastName avatar email isGold',
         });
 
     if (!snap) {
@@ -338,6 +342,7 @@ module.exports.getSnapById = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       avatar: user.avatar,
+      isGold: user.isGold
     };
 
     const formattedReactions = snapObj.reactions.map(r => ({
@@ -352,6 +357,7 @@ module.exports.getSnapById = async (req, res) => {
             firstName: r.userReactionId.firstName,
             lastName: r.userReactionId.lastName,
             avatar: r.userReactionId.avatar,
+            isGold: r.userReactionId.isGold
           }
           : null,
     }));

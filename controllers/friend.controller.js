@@ -128,8 +128,8 @@ module.exports.getFriendList = async (req, res) => {
       ]
     })
         .select('userId friendId friendSince')
-        .populate('userId', 'username avatar firstName lastName')
-        .populate('friendId', 'username avatar firstName lastName')
+        .populate('userId', 'username avatar firstName lastName isGold')
+        .populate('friendId', 'username avatar firstName lastName isGold')
         .skip(offset)
         .limit(limit);
 
@@ -143,6 +143,7 @@ module.exports.getFriendList = async (req, res) => {
         avatar: other.avatar,
         firstName: other.firstName,
         lastName: other.lastName,
+        isGold: other.isGold,
         friendSince: friend.friendSince
       };
     });
@@ -324,7 +325,8 @@ module.exports.getFriendSuggestions = async (req, res) => {
             username: '$user.username',
             firstName: '$user.firstName',
             lastName: '$user.lastName',
-            avatar: '$user.avatar'
+            avatar: '$user.avatar',
+            isGold: '$user.isGold'
           },
           mutualCount: 1
         }}

@@ -69,6 +69,7 @@ module.exports.login = async (req, res) => {
     avatar: user.avatar,
     firstName: user.firstName,
     lastName: user.lastName,
+    isGold: user.isGold
   };
 
   return apiResponse(res, 200, 'Login successfully.', {

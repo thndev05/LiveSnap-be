@@ -14,6 +14,7 @@ module.exports.detail = async (req, res) => {
       avatar: user.avatar,
       firstName: user.firstName,
       lastName: user.lastName,
+      isGold: user.isGold
     };
 
     return apiResponse(res, 200, 'Get detail successfully', {
@@ -235,7 +236,7 @@ module.exports.getUserById = async (req, res) => {
     try {
         const userId = req.params.id;
 
-        const user = await User.findById(userId).select('username email avatar firstName lastName');
+        const user = await User.findById(userId).select('username email avatar firstName lastName isGold');
 
         if (!user) {
             return apiResponse(res, 404, 'User not found.');
@@ -248,6 +249,7 @@ module.exports.getUserById = async (req, res) => {
             avatar: user.avatar,
             firstName: user.firstName,
             lastName: user.lastName,
+            isGold: user.isGold,
         };
 
         return apiResponse(res, 200, 'Get user by ID successfully.', {

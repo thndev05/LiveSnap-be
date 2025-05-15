@@ -34,6 +34,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  isGold: {
+    type: Boolean,
+    default: false
+  },
+  lastGoldAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now,
