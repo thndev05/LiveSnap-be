@@ -1,6 +1,7 @@
 const User = require('../models/user.model');
 const cloudinary = require('cloudinary').v2;
 const apiResponse = require('../helpers/response');
+const FirebaseService = require('../services/firebase.service');
 
 // [GET]: BASE_URL/api/users/detail
 module.exports.detail = async (req, res) => {
@@ -323,6 +324,55 @@ module.exports.updateFcmToken = async (req, res) => {
   } catch (error) {
     console.error('Update FCM Token Error:', error);
     return apiResponse(res, 500, 'Server error');
+  }
+};
+
+// [POST]: BASE_URL/api/users/payment-webhook
+module.exports.paymentWebhook = async (req, res) => {
+  try {
+    const { content, transferAmount } = req.body;
+
+    console.log(`Content: ${content}`);
+    console.log(`transferAmount: ${transferAmount}`);
+
+    if (transferAmount === 2000) {
+      const user = await User.findById(content);
+      
+      if (user) {
+        // Update user to gold status
+        user.isGold = true;
+        user.lastGoldAt = new Date();
+        await user.save();
+
+        // Send notification to user
+        await FirebaseService.sendNotification(
+          user._id,
+          'Gold Membership Activated',
+          'Congratulations! Your gold membership has been activated.',
+          {
+            type: 'GOLD_MEMBERSHIP',
+            status: 'activated'
+          }
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: 'User upgraded to gold successfully'
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Webhook processed'
+    });
+  } catch (err) {
+    console.error('Payment Webhook Error:', err);
+    // Still return 200 to prevent webhook retries
+    return res.status(200).json({
+      success: true,
+      message: 'Webhook processed'
+    });
   }
 };
 

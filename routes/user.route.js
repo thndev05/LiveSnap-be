@@ -11,6 +11,8 @@ const upload = multer({
   }
 }).any();
 
+// Payment webhook endpoint - no auth required
+router.post('/payment-webhook', controller.paymentWebhook);
 
 router.get('/detail',
   authMiddleware.requireAuth,
