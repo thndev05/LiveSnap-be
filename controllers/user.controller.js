@@ -402,7 +402,7 @@ module.exports.getPaymentQR = async (req, res) => {
         bank: "TPBank",
         accountNumber: "00002084815",
         accountName: "Huỳnh Quốc Khánh",
-        amount: "2,000 VND",
+        amount: 2000,
         transferContent: userId.toString(),
       }
     });
