@@ -385,23 +385,30 @@ module.exports.getPaymentQR = async (req, res) => {
     // Construct QR code URL
     const qrCodeUrl = `https://qr.sepay.vn/img?bank=TPBank&acc=00002084815&template=qronly&amount=2000&des=${userId}`;
 
-    // Fetch QR code image
+    // Fetch QR code image as binary data
     const response = await axios.get(qrCodeUrl, {
       responseType: 'arraybuffer'
     });
 
-    // Set appropriate headers
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Length', response.data.length);
-    
-    // Send the image
-    return res.send(response.data);
+    // Convert binary data to Base64 string
+    const base64Image = Buffer.from(response.data, 'binary').toString('base64');
+
+    // Format response
+    return res.json({
+      code: 200,
+      message: 'QR code generated successfully',
+      data: {
+        qrCode: base64Image
+      }
+    });
   } catch (err) {
     console.error('Get Payment QR Error:', err);
     return res.status(500).json({
-      success: false,
-      message: 'Failed to generate QR code'
+      code: 500,
+      message: 'Failed to generate QR code',
+      data: {
+        qrCode: ''
+      }
     });
   }
 };
-
