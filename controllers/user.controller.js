@@ -2,6 +2,7 @@ const User = require('../models/user.model');
 const cloudinary = require('cloudinary').v2;
 const apiResponse = require('../helpers/response');
 const FirebaseService = require('../services/firebase.service');
+const axios = require('axios');
 
 // [GET]: BASE_URL/api/users/detail
 module.exports.detail = async (req, res) => {
@@ -372,6 +373,34 @@ module.exports.paymentWebhook = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Webhook processed'
+    });
+  }
+};
+
+// [GET]: BASE_URL/api/users/payment-qr
+module.exports.getPaymentQR = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Construct QR code URL
+    const qrCodeUrl = `https://qr.sepay.vn/img?bank=TPBank&acc=00002084815&template=qronly&amount=2000&des=${userId}`;
+
+    // Fetch QR code image
+    const response = await axios.get(qrCodeUrl, {
+      responseType: 'arraybuffer'
+    });
+
+    // Set appropriate headers
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Length', response.data.length);
+    
+    // Send the image
+    return res.send(response.data);
+  } catch (err) {
+    console.error('Get Payment QR Error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate QR code'
     });
   }
 };
