@@ -398,7 +398,12 @@ module.exports.getPaymentQR = async (req, res) => {
       code: 200,
       message: 'QR code generated successfully',
       data: {
-        qrCode: base64Image
+        qrCode: base64Image,
+        bank: "TPBank",
+        accountNumber: "00002084815",
+        accountName: "Huỳnh Quốc Khánh",
+        amount: "2,000 VND",
+        transferContent: userId.toString(),
       }
     });
   } catch (err) {
@@ -406,9 +411,6 @@ module.exports.getPaymentQR = async (req, res) => {
     return res.status(500).json({
       code: 500,
       message: 'Failed to generate QR code',
-      data: {
-        qrCode: ''
-      }
     });
   }
 };
