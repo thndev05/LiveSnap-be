@@ -70,4 +70,9 @@ router.post('/check-password',
 
 router.post('/fcm-token', authMiddleware.requireAuth, controller.updateFcmToken);
 
+router.post('/send-feedback',
+  authMiddleware.requireAuth,
+  controller.sendFeedback
+);
+
 module.exports = router;

@@ -1,4 +1,5 @@
 const User = require('../models/user.model');
+const Feedback = require('../models/feedback.model');
 const cloudinary = require('cloudinary').v2;
 const apiResponse = require('../helpers/response');
 const FirebaseService = require('../services/firebase.service');
@@ -338,7 +339,7 @@ module.exports.paymentWebhook = async (req, res) => {
 
     if (transferAmount === 2000) {
       const user = await User.findById(content);
-      
+
       if (user) {
         // Update user to gold status
         user.isGold = true;
@@ -412,5 +413,29 @@ module.exports.getPaymentQR = async (req, res) => {
       code: 500,
       message: 'Failed to generate QR code',
     });
+  }
+};
+
+// [POST]: BASE_URL/api/users/send-feedback
+module.exports.sendFeedback = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { message } = req.body;
+
+    if (!message || message.trim() === '') {
+      return apiResponse(res, 400, 'Feedback message is required.');
+    }
+
+    const feedback = new Feedback({
+      userId,
+      message: message.trim(),
+    });
+
+    await feedback.save();
+
+    return apiResponse(res, 200, 'Feedback sent successfully.', feedback);
+  } catch (error) {
+    console.error('Send feedback error:', error);
+    return apiResponse(res, 500, 'Failed to send feedback.');
   }
 };
