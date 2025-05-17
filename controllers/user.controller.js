@@ -439,3 +439,18 @@ module.exports.sendFeedback = async (req, res) => {
     return apiResponse(res, 500, 'Failed to send feedback.');
   }
 };
+
+// [GET]: BASE_URL/api/users/feedback-history
+module.exports.getFeedbackHistory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const feedbacks = await Feedback.find({ userId })
+      .sort({ createdAt: -1 });
+
+    return apiResponse(res, 200, 'Get feedback history successfully.', feedbacks);
+  } catch (error) {
+    console.error('Get feedback history error:', error);
+    return apiResponse(res, 500, 'Failed to get feedback history.');
+  }
+};

@@ -61,7 +61,6 @@ router.post('/check-username-exist',
   controller.checkUsernameExist
 );
 
-router.get('/:id', controller.getUserById);
 
 router.post('/check-password',
     authMiddleware.requireAuth,
@@ -74,5 +73,13 @@ router.post('/send-feedback',
   authMiddleware.requireAuth,
   controller.sendFeedback
 );
+
+router.get('/feedback-history',
+  authMiddleware.requireAuth,
+  controller.getFeedbackHistory
+);
+
+router.get('/:id', controller.getUserById);
+
 
 module.exports = router;
