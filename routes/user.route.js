@@ -79,6 +79,12 @@ router.get('/feedback-history',
   controller.getFeedbackHistory
 );
 
+router.patch('/update-visibility',
+  authMiddleware.requireAuth,
+  controller.updateVisibility
+);
+
+
 router.get('/:id', controller.getUserById);
 
 
