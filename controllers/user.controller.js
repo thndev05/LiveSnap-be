@@ -4,6 +4,7 @@ const cloudinary = require('cloudinary').v2;
 const apiResponse = require('../helpers/response');
 const FirebaseService = require('../services/firebase.service');
 const axios = require('axios');
+const bcrypt = require('bcrypt');
 
 // [GET]: BASE_URL/api/users/detail
 module.exports.detail = async (req, res) => {
