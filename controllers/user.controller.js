@@ -1,4 +1,5 @@
 const User = require('../models/user.model');
+const Feedback = require('../models/feedback.model');
 const cloudinary = require('cloudinary').v2;
 const apiResponse = require('../helpers/response');
 const FirebaseService = require('../services/firebase.service');
@@ -145,7 +146,7 @@ module.exports.updateUsername = async (req, res) => {
 };
 
 
-// [GET]: BASE_URL/api/users/search?username=abc?limit=3
+// [GET]: BASE_URL/api/users/search?username=abc&limit=3
 module.exports.search = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -158,21 +159,19 @@ module.exports.search = async (req, res) => {
 
     const users = await User.find({
       username: { $regex: username, $options: 'i' },
-      _id: { $ne: userId }
+      _id: { $ne: userId },
+      isVisible: true // ✅ Chỉ tìm kiếm những tài khoản đang hiển thị
     })
-        .select('username firstName lastName avatar')
-        .limit(limit);
+      .select('username firstName lastName avatar')
+      .limit(limit);
 
-    const formattedUsers = users.map(user => {
-      const u = user.toObject();
-      return {
-        id: u._id,
-        username: u.username,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        avatar: u.avatar,
-      };
-    });
+    const formattedUsers = users.map(user => ({
+      id: user._id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatar: user.avatar,
+    }));
 
     return apiResponse(res, 200, 'Search users successfully.', formattedUsers);
   } catch (e) {
@@ -180,6 +179,7 @@ module.exports.search = async (req, res) => {
     return apiResponse(res, 400, 'Failed to search user.');
   }
 };
+
 
 // [POST]: BASE_URL/api/users/check-email-exist
 module.exports.checkEmailExist = async (req, res) => {
@@ -338,7 +338,7 @@ module.exports.paymentWebhook = async (req, res) => {
 
     if (transferAmount === 2000) {
       const user = await User.findById(content);
-      
+
       if (user) {
         // Update user to gold status
         user.isGold = true;
@@ -412,5 +412,79 @@ module.exports.getPaymentQR = async (req, res) => {
       code: 500,
       message: 'Failed to generate QR code',
     });
+  }
+};
+
+// [POST]: BASE_URL/api/users/send-feedback
+module.exports.sendFeedback = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { message } = req.body;
+
+    if (!message || message.trim() === '') {
+      return apiResponse(res, 400, 'Feedback message is required.');
+    }
+
+    const feedback = new Feedback({
+      userId,
+      message: message.trim(),
+    });
+
+    await feedback.save();
+
+    return apiResponse(res, 200, 'Feedback sent successfully.', feedback);
+  } catch (error) {
+    console.error('Send feedback error:', error);
+    return apiResponse(res, 500, 'Failed to send feedback.');
+  }
+};
+
+// [GET]: BASE_URL/api/users/feedback-history
+module.exports.getFeedbackHistory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const feedbacks = await Feedback.find({ userId })
+      .sort({ createdAt: -1 });
+
+    return apiResponse(res, 200, 'Get feedback history successfully.', feedbacks);
+  } catch (error) {
+    console.error('Get feedback history error:', error);
+    return apiResponse(res, 500, 'Failed to get feedback history.');
+  }
+};
+
+// [PATCH]: BASE_URL/api/users/update-visibility
+module.exports.updateVisibility = async (req, res) => {
+  try {
+    const userId = req.user?._id || req.userId;
+
+    if (!userId) {
+      return apiResponse(res, 401, 'Unauthorized: Missing user ID');
+    }
+
+    const { visible } = req.body;
+
+    if (typeof visible !== 'boolean') {
+      return apiResponse(res, 400, '"visible" field must be a boolean value (true or false).');
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { isVisible: visible },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return apiResponse(res, 404, 'User not found.');
+    }
+
+    return apiResponse(res, 200, 'Account visibility updated successfully.', {
+      isVisible: updatedUser.isVisible
+    });
+
+  } catch (error) {
+    console.error('Update visibility error:', error);
+    return apiResponse(res, 500, 'Server error occurred.', { error: error.message });
   }
 };

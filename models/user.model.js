@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isVisible: {
+    type: Boolean,
+    default: true
+  },
   lastGoldAt: {
     type: Date,
     default: null

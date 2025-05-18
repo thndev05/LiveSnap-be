@@ -61,7 +61,6 @@ router.post('/check-username-exist',
   controller.checkUsernameExist
 );
 
-router.get('/:id', controller.getUserById);
 
 router.post('/check-password',
     authMiddleware.requireAuth,
@@ -69,5 +68,24 @@ router.post('/check-password',
 );
 
 router.post('/fcm-token', authMiddleware.requireAuth, controller.updateFcmToken);
+
+router.post('/send-feedback',
+  authMiddleware.requireAuth,
+  controller.sendFeedback
+);
+
+router.get('/feedback-history',
+  authMiddleware.requireAuth,
+  controller.getFeedbackHistory
+);
+
+router.patch('/update-visibility',
+  authMiddleware.requireAuth,
+  controller.updateVisibility
+);
+
+
+router.get('/:id', controller.getUserById);
+
 
 module.exports = router;
