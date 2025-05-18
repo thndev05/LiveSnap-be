@@ -13,7 +13,7 @@ function setOTP(email) {
   return otp;
 }
 
-function verifyOTP(email, inputOtp) {
+function verifyOTP(email, inputOtp, deleteOtp = true) {
   const entry = otpMap.get(email);
   if (!entry) return false;
 
@@ -28,7 +28,9 @@ function verifyOTP(email, inputOtp) {
 
   if (!isValid) return false;
 
-  otpMap.delete(email);
+  if (deleteOtp) {
+    otpMap.delete(email);
+  }
   return true;
 }
 
