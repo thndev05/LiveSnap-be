@@ -86,6 +86,8 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 FIREBASE_PROJECT_ID=your_project_id
+EMAIL_ADDRESS=your_email_address
+EMAIL_PASSWORD=your_email_password
 ```
 
 4. Start the development server
