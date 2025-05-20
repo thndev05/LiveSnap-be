@@ -106,6 +106,9 @@ module.exports.upload = async (req, res) => {
     delete snapObj._id;
     delete snapObj.__v;
 
+    // Send notifications to friends
+    await FirebaseService.sendNewSnapNotification(userId, newSnap._id);
+
     return apiResponse(res, 200, 'Upload snap successfully.', snapObj);
 
   } catch (error) {

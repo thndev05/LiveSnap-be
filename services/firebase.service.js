@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
 const User = require('../models/user.model');
+const Friend = require('../models/friend.model');
 
 // Khởi tạo Firebase Admin SDK
 const serviceAccount = require('../firebase-service-account.json');
@@ -89,6 +90,41 @@ class FirebaseService {
       await this.sendNotification(snapOwnerId, title, body, data);
     } catch (error) {
       console.error('Error sending snap reaction notification:', error);
+    }
+  }
+
+  static async sendNewSnapNotification(snapOwnerId, snapId) {
+    try {
+      const snapOwner = await User.findById(snapOwnerId);
+      if (!snapOwner) return;
+
+      // Get all friends of the snap owner
+      const friendships = await Friend.find({
+        $or: [
+          { userId: snapOwnerId, status: 'accepted' },
+          { friendId: snapOwnerId, status: 'accepted' }
+        ]
+      });
+
+      // Get friend IDs
+      const friendIds = friendships.map(f => 
+        f.userId.toString() === snapOwnerId.toString() ? f.friendId : f.userId
+      );
+
+      const title = 'New Snap';
+      const body = `${snapOwner.firstName} ${snapOwner.lastName} posted a new snap`;
+      const data = {
+        type: 'NEW_SNAP',
+        snapId: snapId.toString(),
+        snapOwnerId: snapOwnerId.toString()
+      };
+
+      // Send notification to all friends
+      for (const friendId of friendIds) {
+        await this.sendNotification(friendId, title, body, data);
+      }
+    } catch (error) {
+      console.error('Error sending new snap notification:', error);
     }
   }
 }
