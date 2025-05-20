@@ -168,8 +168,9 @@ module.exports.loadSnaps = async (req, res) => {
           return apiResponse(res, 403, 'You are not allowed to view snaps of this user.');
         }
 
-        // const friendSince = isFriend.friendSince;
+        const friendSince = isFriend.friendSince;
         // snapConditions.push({ userId: targetUserId, createdAt: { $gte: friendSince } });
+        snapConditions.push({ userId: targetUserId});
       }
     } else {
       const friendships = await Friend.find({
@@ -190,7 +191,7 @@ module.exports.loadSnaps = async (req, res) => {
 
       snapConditions = friendWithDate.map(f => ({
         userId: f.friendId,
-        createdAt: { $gte: f.friendSince }
+        // createdAt: { $gte: f.friendSince }
       }));
 
       // Add user's own snaps
