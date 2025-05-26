@@ -332,10 +332,17 @@ module.exports.updateFcmToken = async (req, res) => {
 // [POST]: BASE_URL/api/users/payment-webhook
 module.exports.paymentWebhook = async (req, res) => {
   try {
-    const { content, transferAmount } = req.body;
+    let { content, transferAmount } = req.body;
 
     console.log(`Content: ${content}`);
     console.log(`transferAmount: ${transferAmount}`);
+
+    const parts = content.trim().split(' ');
+    if (parts.length === 3) {
+      content = parts[2];
+    }
+
+    console.log(`Content (parsed): ${content}`);
 
     if (transferAmount === 2000) {
       const user = await User.findById(content);
